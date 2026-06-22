@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>StudyShield AI — Demo</title>
+<style>
+  :root{
+    --dark:#0A2E36;
+    --dark2:#0F3D45;
+    --teal:#028090;
+    --seafoam:#00A896;
+    --mint:#02C39A;
+    --off:#F4FAF9;
+    --text:#13343B;
+    --muted:#5C7A80;
+    --danger:#E2543A;
+    --warn:#E0A82E;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background: radial-gradient(circle at 80% -10%, rgba(2,195,154,0.18), transparent 50%),
+                radial-gradient(circle at -10% 60%, rgba(0,168,150,0.12), transparent 45%),
+                var(--dark);
+    color:var(--off); min-height:100vh; padding-bottom:40px;
+  }
+  .wrap{max-width:520px; margin:0 auto; padding:20px 16px 0;}
+
+  header{display:flex; align-items:center; gap:10px; padding:6px 0 18px;}
+  .logo{
+    width:38px; height:38px; border-radius:50%; background:var(--teal);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .logo svg{width:20px; height:20px;}
+  header h1{font-size:18px; margin:0; font-weight:700; letter-spacing:0.2px;}
+  header p{margin:0; font-size:11.5px; color:#8FC9C3;}
+
+  .card{
+    background:var(--dark2); border-radius:16px; padding:18px;
+    margin-bottom:14px; border:1px solid rgba(255,255,255,0.05);
+  }
+  .card.light{ background:var(--off); color:var(--text); }
+
+  .input-row{display:flex; gap:8px; align-items:flex-end;}
+  textarea{
+    flex:1; resize:none; border:none; outline:none; border-radius:12px;
+    padding:12px 14px; font-size:14.5px; font-family:inherit; line-height:1.4;
+    background:#143E47; color:var(--off); min-height:46px; max-height:120px;
+  }
+  textarea::placeholder{color:#6FA8A2;}
+  button.send{
+    background:var(--mint); border:none; color:#062420; width:46px; height:46px;
+    border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:transform .15s ease, opacity .15s ease;
+  }
+  button.send:active{transform:scale(0.92);}
+  button.send svg{width:20px; height:20px;}
+  button.send:disabled{opacity:0.4;}
+
+  .hint{font-size:11.5px; color:#6FA8A2; margin-top:8px;}
+  .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+  .chip{
+    font-size:11.5px; background:#143E47; color:#A8DCD6; padding:6px 10px;
+    border-radius:999px; cursor:pointer; border:1px solid rgba(255,255,255,0.06);
+  }
+  .chip:active{background:#1A4F59;}
+
+  .section-title{font-size:12px; text-transform:uppercase; letter-spacing:0.8px; color:#7FB3AF; margin:18px 2px 8px; font-weight:700;}
+
+  .task{
+    display:flex; gap:12px; padding:13px; border-radius:12px; margin-bottom:8px;
+    background:var(--off); color:var(--text); align-items:flex-start;
+  }
+  .badge{
+    font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px;
+    flex-shrink:0; margin-top:1px; white-space:nowrap;
+  }
+  .badge.urgent{ background:#FCE4DF; color:var(--danger); }
+  .badge.important{ background:#FCEFD6; color:#9A6B14; }
+  .badge.risk{ background:#FCE4DF; color:var(--danger); }
+  .badge.safe{ background:#DCF3EE; color:#067A5C; }
+  .task-body{flex:1; min-width:0;}
+  .task-text{font-size:14px; font-weight:600; line-height:1.35;}
+  .task-sub{font-size:12px; color:var(--muted); margin-top:3px; line-height:1.4;}
+
+  .risk-box{
+    margin-top:8px; background:#FFF3F0; border-radius:10px; padding:10px 12px;
+    font-size:12px; color:#7A2E1E; display:flex; gap:8px; align-items:flex-start;
+  }
+  .risk-box svg{width:15px; height:15px; flex-shrink:0; margin-top:1px; color:var(--danger);}
+
+  .dashboard{display:flex; gap:12px; align-items:center;}
+  .ring-wrap{position:relative; width:84px; height:84px; flex-shrink:0;}
+  .ring-wrap svg{transform:rotate(-90deg);}
+  .ring-label{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .ring-label .num{font-size:20px; font-weight:800; color:var(--text); line-height:1;}
+  .ring-label .lbl{font-size:9px; color:var(--muted); margin-top:2px;}
+  .dash-stats{flex:1;}
+  .dash-stats .row{display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; color:var(--text);}
+  .dash-stats .row span:last-child{font-weight:700;}
+
+  .empty{
+    text-align:center; padding:30px 10px; color:#6FA8A2; font-size:13px;
+  }
+  .empty svg{width:34px; height:34px; margin-bottom:8px; opacity:0.6;}
+
+  footer{text-align:center; font-size:11px; color:#5C8B85; margin-top:24px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z" fill="#fff"/></svg>
+    </div>
+    <div>
+      <h1>StudyShield AI</h1>
+      <p>Level up your workflow. Lock down your security.</p>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="input-row">
+      <textarea id="taskInput" placeholder="Type your tasks... e.g. Finish DBMS assignment, reply to internship email, check this scholarship link bit.ly/win-cash-2026"></textarea>
+      <button class="send" id="sendBtn" onclick="runTriage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#062420" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2" fill="#062420" stroke="none"/></svg>
+      </button>
+    </div>
+    <div class="chips">
+      <div class="chip" onclick="fillExample()">Try an example ✨</div>
+      <div class="chip" onclick="clearAll()">Clear</div>
+    </div>
+    <div class="hint">Tip: paste a link in your task to see the security check in action.</div>
+  </div>
+
+  <div id="planSection" style="display:none;">
+    <div class="section-title">Today's Smart Plan</div>
+    <div id="taskList"></div>
+  </div>
+
+  <div id="dashSection" style="display:none;">
+    <div class="section-title">Your Progress</div>
+    <div class="card light dashboard">
+      <div class="ring-wrap">
+        <svg width="84" height="84" viewBox="0 0 84 84">
+          <circle cx="42" cy="42" r="36" fill="none" stroke="#E3F4F2" stroke-width="9"/>
+          <circle id="ringFg" cx="42" cy="42" r="36" fill="none" stroke="#02C39A" stroke-width="9" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="226"/>
+        </svg>
+        <div class="ring-label">
+          <div class="num" id="ringNum">0%</div>
+          <div class="lbl">SAFETY</div>
+        </div>
+      </div>
+      <div class="dash-stats">
+        <div class="row"><span>Tasks planned</span><span id="statTasks">0</span></div>
+        <div class="row"><span>Urgent items</span><span id="statUrgent">0</span></div>
+        <div class="row"><span>Links flagged</span><span id="statFlagged">0</span></div>
+        <div class="row"><span>Streak</span><span>🔥 4 days</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="emptyState" class="empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/></svg>
+    <div>Add a few tasks above and StudyShield will plan your day — and screen every link you paste.</div>
+  </div>
+
+  <footer>Demo build — H2S Hackathon 2026 · Level Up Your Life</footer>
+</div>
+
+<script>
+const URGENT_WORDS = ["urgent","today","asap","deadline","due","exam","assignment","submit","tomorrow"];
+const IMPORTANT_WORDS = ["email","interview","internship","meeting","reply","call","apply"];
+const SUSPICIOUS_PATTERNS = [
+  { re: /bit\.ly|tinyurl|t\.co|cutt\.ly/i, reason: "Shortened link hides the real destination" },
+  { re: /free.*(cash|money|prize|gift)/i, reason: "\"Free money/prize\" wording is a classic scam lure" },
+  { re: /win|winner|congratulations/i, reason: "Unsolicited \"you won\" messaging is a common phishing hook" },
+  { re: /verify.*(account|password|otp)/i, reason: "Urgent account-verification requests often impersonate real services" },
+  { re: /\.(xyz|top|click|info)\b/i, reason: "Uncommon domain ending often used in scam links" },
+];
+const LINK_RE = /(https?:\/\/[^\s,]+|www\.[^\s,]+|\b[a-z0-9-]+\.(?:com|in|org|net|xyz|top|click|info)[^\s,]*)/gi;
+
+function fillExample(){
+  document.getElementById('taskInput').value =
+    "Finish DBMS assignment due today, reply to internship interview email, check this scholarship link bit.ly/win-cash-2026, plan tomorrow's study session";
+  runTriage();
+}
+function clearAll(){
+  document.getElementById('taskInput').value = "";
+  document.getElementById('planSection').style.display = "none";
+  document.getElementById('dashSection').style.display = "none";
+  document.getElementById('emptyState').style.display = "block";
+}
+
+function splitTasks(text){
+  return text.split(/,|\n|;/).map(t=>t.trim()).filter(t=>t.length>0);
+}
+
+function classify(taskText){
+  const lower = taskText.toLowerCase();
+  const links = taskText.match(LINK_RE) || [];
+  let riskHit = null;
+  links.forEach(link=>{
+    for(const p of SUSPICIOUS_PATTERNS){
+      if(p.re.test(lower) || p.re.test(link)){ riskHit = p.reason; break; }
+    }
+  });
+
+  let level = "Plan";
+  if(URGENT_WORDS.some(w=>lower.includes(w))) level = "Urgent";
+  else if(IMPORTANT_WORDS.some(w=>lower.includes(w))) level = "Important";
+
+  return { text: taskText, level, link: links[0] || null, riskHit };
+}
+
+function ringColorFor(score){
+  if(score >= 75) return "#02C39A";
+  if(score >= 45) return "#E0A82E";
+  return "#E2543A";
+}
+
+function runTriage(){
+  const raw = document.getElementById('taskInput').value.trim();
+  if(!raw) return;
+  const tasks = splitTasks(raw).map(classify);
+
+  const order = {Urgent:0, Important:1, Plan:2};
+  tasks.sort((a,b)=>order[a.level]-order[b.level]);
+
+  const listEl = document.getElementById('taskList');
+  listEl.innerHTML = "";
+
+  let urgentCount = 0, flaggedCount = 0;
+
+  tasks.forEach(t=>{
+    if(t.level==="Urgent") urgentCount++;
+    if(t.riskHit) flaggedCount++;
+
+    const div = document.createElement('div');
+    div.className = 'task';
+
+    const badgeClass = t.level==="Urgent" ? "urgent" : t.level==="Important" ? "important" : "safe";
+    const badgeText = t.level==="Urgent" ? "URGENT" : t.level==="Important" ? "IMPORTANT" : "PLAN";
+
+    let riskHtml = "";
+    if(t.link){
+      if(t.riskHit){
+        riskHtml = `<div class="risk-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          <div><strong>Risk detected:</strong> ${t.riskHit}</div>
+        </div>`;
+      } else {
+        riskHtml = `<div class="task-sub">🔗 Link checked — no risk signals found</div>`;
+      }
+    }
+
+    div.innerHTML = `
+      <span class="badge ${t.riskHit ? 'risk' : badgeClass}">${t.riskHit ? '⚠ FLAGGED' : badgeText}</span>
+      <div class="task-body">
+        <div class="task-text">${escapeHtml(t.text)}</div>
+        ${riskHtml}
+      </div>
+    `;
+    listEl.appendChild(div);
+  });
+
+  document.getElementById('planSection').style.display = "block";
+  document.getElementById('dashSection').style.display = "block";
+  document.getElementById('emptyState').style.display = "none";
+
+  const total = tasks.length;
+  const safetyScore = Math.max(15, Math.round(100 - (flaggedCount/total)*70));
+  document.getElementById('statTasks').textContent = total;
+  document.getElementById('statUrgent').textContent = urgentCount;
+  document.getElementById('statFlagged').textContent = flaggedCount;
+  document.getElementById('ringNum').textContent = safetyScore + "%";
+
+  const circumference = 226;
+  const offset = circumference - (circumference * safetyScore/100);
+  const ringFg = document.getElementById('ringFg');
+  ringFg.style.stroke = ringColorFor(safetyScore);
+  ringFg.style.transition = "stroke-dashoffset 0.8s ease, stroke 0.3s ease";
+  setTimeout(()=>{ ringFg.style.strokeDashoffset = offset; }, 50);
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>
